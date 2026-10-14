@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulateur foils</title>
+<meta name="description" content="Un foil peut-il soulager ce navire ? Outil de présélection du projet scientifique CESI FIFC (mémoire, chapitre 13).">
+<style>
+:root{
+  --cream:#F3F2EB;--paper:#FFFFFF;--ink:#0A1B26;--navy:#0B2C40;--blue:#2E6E8A;--yel:#F2B705;--teal:#3FB8A0;
+  --red:#E0533D;--cyan:#8FD3E0;--grey:#56656E;--mist:#E2EDF2;--line:#D6D9D2;--orange:#E07A2E;--green:#2E9E7F;
+  --serif:"Century Schoolbook","Century Schoolbook L","TeX Gyre Schola",Georgia,serif;
+  --sans:Arial,"Helvetica Neue",Helvetica,sans-serif;--mono:"Courier New",Courier,monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+h1,h2,h3{font-family:var(--serif);font-weight:400;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+.kicker{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.28em;color:var(--blue);text-transform:uppercase}
+.mono{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--grey)}
+header{padding:28px 0 8px}
+header h1{font-size:clamp(28px,4.4vw,46px);line-height:1.12;margin:8px 0 6px}
+header p.lead{font-family:var(--serif);font-style:italic;color:var(--blue);font-size:clamp(16px,2.2vw,21px);margin:0}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;padding:18px 0 28px}
+@media(min-width:980px){.grid{grid-template-columns:360px minmax(0,1fr);align-items:start}aside{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}}
+.card{background:var(--paper);border-left:5px solid var(--blue);padding:16px 18px;margin-bottom:18px}
+.card.teal{border-left-color:var(--teal)}.card.yel{border-left-color:var(--yel)}.card.red{border-left-color:var(--red)}.card.navy{border-left-color:var(--navy)}
+.card h2{font-size:22px;margin:4px 0 4px}
+.card p.sub{margin:0 0 12px;color:var(--grey);font-size:14px}
+.ships{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ship{border:1.5px solid var(--line);background:var(--paper);padding:8px 8px 6px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.ship:hover{border-color:var(--blue)}
+.ship.on{border-color:var(--navy);background:var(--mist)}
+.ship svg{display:block;width:100%;height:34px}
+.ship b{display:block;font-size:13px;margin-top:4px}
+.ship span{display:block;font-size:11px;color:var(--grey)}
+.ship .tag{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:.04em}
+details.reg>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+details.reg>summary::-webkit-details-marker{display:none}
+details.reg>summary::after{content:"+";font-family:var(--mono);font-size:18px;color:var(--blue)}
+details.reg[open]>summary::after{content:"–"}
+.ctl{margin:10px 0 12px}
+.ctl .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ctl label{font-size:13px}
+.ctl .num{display:flex;align-items:baseline;gap:4px}
+.ctl input[type=number]{width:96px;font:inherit;font-size:14px;font-weight:700;text-align:right;border:1px solid var(--line);background:var(--cream);padding:2px 6px;color:var(--navy)}
+.ctl .u{font-size:12px;color:var(--grey);min-width:34px}
+.ctl input[type=range]{width:100%;accent-color:var(--blue);margin:4px 0 0}
+.ctl .hint{font-size:11px;color:var(--grey)}
+.ctl .auto{font-size:12px;display:flex;align-items:center;gap:6px;margin-top:2px;color:var(--grey)}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--navy);margin-top:6px}
+.seg button{font:inherit;font-size:12px;padding:7px 6px;border:0;background:var(--paper);color:var(--navy);cursor:pointer;line-height:1.25}
+.seg button.on{background:var(--navy);color:#fff}
+.fixed{font-size:12px;color:var(--grey);border-top:1px dashed var(--line);padding-top:8px;margin-top:6px}
+.reset{font:inherit;font-size:12px;border:1.5px solid var(--navy);background:transparent;color:var(--navy);padding:5px 10px;cursor:pointer}
+.verdict{padding:16px 18px;margin-bottom:18px;color:#fff;background:var(--orange);position:relative}
+.verdict.green{background:var(--green)}
+.verdict .vk{font-family:var(--mono);font-size:12px;letter-spacing:.12em;opacity:.95}
+.verdict h2{font-size:clamp(22px,3vw,30px);margin:4px 0 6px;color:#fff}
+.verdict p{margin:0;font-size:14px}
+.verdict .other{margin-top:8px;font-size:13px;background:rgba(0,0,0,.14);padding:6px 10px;display:inline-block}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-size:12px;padding:3px 8px;background:#fff;color:var(--ink)}
+.chip.r{color:#9b2c1c}.chip.a{color:#7a5300}.chip.b{color:var(--navy)}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:18px}
+@media(min-width:700px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tile{background:var(--paper);padding:12px 14px;border-top:4px solid var(--blue)}
+.tile .l{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--grey);text-transform:uppercase}
+.tile .v{font-family:var(--serif);font-size:clamp(22px,2.6vw,28px);line-height:1.15;margin-top:4px}
+.tile .s{font-size:12px;color:var(--grey)}
+svg text{font-family:var(--sans)}
+.fig{width:100%;height:auto;display:block}
+.cap{font-size:13px;color:var(--grey);margin:8px 0 0}
+.duel .row{display:grid;grid-template-columns:110px minmax(0,1fr) 72px;gap:10px;align-items:center;margin:8px 0}
+.duel .bar{height:22px;background:var(--mist);position:relative}
+.duel .fill{position:absolute;left:0;top:0;bottom:0;transition:width .5s}
+.duel .val{font-family:var(--serif);font-size:24px;text-align:right}
+.duel .lab{font-size:13px;line-height:1.25}
+.duel .lab small{display:block;color:var(--grey);font-size:11px}
+.duel .axis{display:grid;grid-template-columns:110px minmax(0,1fr) 72px;gap:10px}
+.duel .ticks{position:relative;height:16px;font-family:var(--mono);font-size:10px;color:var(--grey)}
+.duel .ticks span{position:absolute;transform:translateX(-50%)}
+.duel .thr{position:absolute;top:-4px;bottom:-4px;width:0;border-left:2px dashed var(--navy)}
+.stack{display:flex;height:34px;margin:6px 0}
+.stack div{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;transition:width .5s}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--grey);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;margin-right:5px;vertical-align:-2px}
+.chain{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+@media(min-width:700px){.chain{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.branch .bh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;padding:6px 10px;color:#fff;background:var(--navy)}
+.branch.f .bh{background:var(--blue)}
+.node{background:var(--cream);border-left:4px solid var(--navy);padding:6px 10px;margin-top:6px;display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.branch.f .node{border-left-color:var(--teal)}
+.node b{font-family:var(--serif);font-weight:400;font-size:15px;white-space:nowrap}
+.node small{display:block;color:var(--grey);font-size:11px}
+.arrow{text-align:center;color:var(--grey);font-size:12px;line-height:1;margin-top:4px}
+.merge{margin-top:12px;background:var(--navy);color:#fff;padding:10px 14px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center}
+.merge b{font-family:var(--serif);font-weight:400;font-size:18px}
+table.steps{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+table.steps th{font-family:var(--mono);font-size:11px;font-weight:400;text-align:left;color:#fff;background:var(--navy);padding:6px 8px}
+table.steps td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.steps td:last-child{text-align:right;white-space:nowrap;font-weight:700}
+table.steps tr.h td{background:var(--mist);font-family:var(--mono);font-size:11px;color:var(--navy);font-weight:400}
+details.more{margin-top:12px}
+details.more summary{cursor:pointer;font-size:13px;color:var(--blue)}
+.limits{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin:0;padding:0;list-style:none}
+@media(min-width:700px){.limits{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.limits li{background:var(--cream);padding:10px 12px;font-size:13px}
+.limits li b{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--blue);font-weight:400;margin-bottom:2px}
+footer{background:var(--navy);color:#C9D6DE;padding:0 0 22px;font-size:13px}
+footer .sea{display:block;width:100%;height:70px}
+footer a{color:var(--cyan)}
+@media (prefers-reduced-motion:no-preference){.bob{animation:bob 3.4s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(-.6deg)}}
+.drift{animation:drift 9s linear infinite}@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-40px)}}}
+.beam,.pl{transition:transform .7s cubic-bezier(.3,1.4,.5,1)}
+.hide{display:none}
+.grid>*,.ships>*,.tiles>*,.chain>*{min-width:0}
+svg{max-width:100%}
+.hleg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 14px;margin-top:10px;font-size:13px}
+@media(min-width:700px){.hleg{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.hleg div{border-left:4px solid var(--navy);padding-left:8px;line-height:1.3}
+.hleg small{display:block;color:var(--grey);font-size:11px}
+@media(max-width:640px){#hero .hl{display:none}#speed text,#balance text,#top text{font-size:20px}}
+</style>
+</head>
+<body>
+<header class="wrap">
+  <div class="kicker">Projet scientifique · CESI FIFC · outil de présélection</div>
+  <h1>Un foil peut-il soulager ce navire ?</h1>
+  <p class="lead">Le foil n’est rentable que s’il porte mieux que la coque qu’il soulage.</p>
+</header>
+
+<main class="wrap grid">
+  <aside>
+    <div class="card navy">
+      <div class="kicker">1 · Choisir un navire</div>
+      <p class="sub" style="margin-top:6px">Le Silver Mary est le cas d’étude du mémoire. Les quatre autres sont des exemples hors mémoire (ordres de grandeur).</p>
+      <div class="ships" id="ships"></div>
+    </div>
+    <div class="card">
+      <details class="reg" id="reg" open>
+        <summary><span class="kicker">2 · Régler</span></summary>
+        <div class="mono" style="margin-top:12px">LE NAVIRE</div>
+        <div id="ctl-ship"></div>
+        <div class="mono" style="margin-top:14px">LES FOILS</div>
+        <div id="ctl-foil"></div>
+        <div class="ctl">
+          <label>Taille des foils</label>
+          <div class="seg" id="mode">
+            <button data-m="largeur">Envergure = largeur du navire<br><small>règle du chapitre 7</small></button>
+            <button data-m="adaptee">Surface adaptée à la vitesse<br><small>CL optimal, section 7.7</small></button>
+          </div>
+        </div>
+        <div class="fixed">Fixés comme dans le mémoire : traînée de profil CD0 = 0,008 · facteur d’Oswald e = 0,80 · CL max = 1,2 · eau de mer ρ = 1 025 kg/m³, ν = 1,19×10⁻⁶ m²/s.</div>
+        <div style="margin-top:12px"><button class="reset" id="reset">Revenir au cas d’étude</button></div>
+      </details>
+    </div>
+  </aside>
+
+  <section>
+    <div class="card navy" style="padding-bottom:10px">
+      <div class="kicker">Le navire et ses foils · vue de côté</div>
+      <svg class="fig" id="hero" viewBox="0 0 1000 400" role="img" aria-label="Le navire, ses foils et les efforts qui s’exercent sur lui"></svg>
+      <div class="hleg" id="hleg"></div>
+      <p class="cap" id="heroCap"></p>
+    </div>
+
+    <div class="verdict" id="verdict">
+      <div class="vk" id="vk"></div>
+      <h2 id="vh"></h2>
+      <p id="vp"></p>
+      <div class="other" id="vo"></div>
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <div class="tiles">
+      <div class="tile" style="border-top-color:var(--teal)"><div class="l">Gain sur la coque</div><div class="v" id="t1"></div><div class="s">k · RT</div></div>
+      <div class="tile" style="border-top-color:var(--red)"><div class="l">Traînée des foils</div><div class="v" id="t2"></div><div class="s">D = k · P / E</div></div>
+      <div class="tile" style="border-top-color:var(--navy)"><div class="l">Bilan net</div><div class="v" id="t3"></div><div class="s">ΔR = k · RT − D</div></div>
+      <div class="tile" style="border-top-color:var(--yel)"><div class="l" id="t4l">Puissance</div><div class="v" id="t4"></div><div class="s">ΔR · V</div></div>
+    </div>
+
+    <div class="card teal duel">
+      <div class="kicker">Le duel des finesses · critère du mémoire (6.4)</div>
+      <h2 id="duelH"></h2>
+      <p class="sub">Combien de newtons de poids chacun porte pour un newton de résistance. Le foil doit dépasser la coque : E &gt; P / RT.</p>
+      <div class="row"><div class="lab">La coque<small>flottaison, P / RT</small></div><div class="bar"><div class="fill" id="bC" style="background:var(--navy)"></div></div><div class="val" id="vC"></div></div>
+      <div class="row"><div class="lab">Les foils<small>finesse E = CL / CD</small></div><div class="bar"><div class="fill" id="bF" style="background:var(--teal)"></div><div class="thr" id="thr"></div></div><div class="val" id="vF"></div></div>
+      <div class="axis"><div></div><div class="ticks" id="ticks"></div><div></div></div>
+      <p class="cap" id="duelCap"></p>
+    </div>
+
+    <div class="card red">
+      <div class="kicker">La balance · ce que le foil rapporte face à ce qu’il coûte</div>
+      <svg class="fig" id="balance" viewBox="0 0 640 330" role="img" aria-label="Balance entre le gain sur la coque et la traînée des foils"></svg>
+      <p class="cap" id="balCap"></p>
+    </div>
+
+    <div class="card navy">
+      <div class="kicker">La résistance de la coque · sections 4.3 et 4.4</div>
+      <h2 id="rtH"></h2>
+      <div class="stack" id="stack"></div>
+      <div class="legend"><span><i style="background:var(--blue)"></i>frottement corrigé (1 + kf) · RF</span><span><i style="background:var(--cyan)"></i>résistance résiduelle RR (vagues et forme)</span></div>
+      <p class="cap" id="rtCap"></p>
+    </div>
+
+    <div class="card yel">
+      <div class="kicker">Les foils vus de dessous, à l’échelle</div>
+      <svg class="fig" id="top" viewBox="0 0 640 300" role="img" aria-label="Vue de dessous de la coque et des foils à l’échelle"></svg>
+      <p class="cap" id="topCap"></p>
+    </div>
+
+    <div class="card">
+      <div class="kicker">La chaîne du calcul · coque, foils, bilan</div>
+      <p class="sub" style="margin-top:6px">Les mêmes étapes que le tableau 7.2 du mémoire, recalculées pour le navire choisi.</p>
+      <div class="chain">
+        <div class="branch c"><div class="bh">BRANCHE COQUE · combien coûte la flottaison ?</div><div id="chC"></div></div>
+        <div class="branch f"><div class="bh">BRANCHE FOILS · combien coûte la portance ?</div><div id="chF"></div></div>
+      </div>
+      <div class="merge"><span id="mergeL"></span><b id="mergeR"></b></div>
+      <details class="more"><summary>Voir le calcul en 13 étapes</summary><table class="steps"><thead><tr><th>#</th><th>Grandeur</th><th>Formule</th><th>Valeur</th></tr></thead><tbody id="steps"></tbody></table></details>
+    </div>
+
+    <div class="card teal">
+      <div class="kicker">Et si le navire allait plus vite ? · section 7.7</div>
+      <h2 id="spH"></h2>
+      <svg class="fig" id="speed" viewBox="0 0 640 330" role="img" aria-label="Finesse de la coque et du foil en fonction de la vitesse"></svg>
+      <div class="legend"><span><i style="background:var(--navy)"></i>finesse de la coque</span><span><i style="background:var(--teal)"></i>foil à surface adaptée (finesse maximale)</span><span><i style="background:var(--orange)"></i>foils de la largeur du navire</span><span><i style="background:var(--yel)"></i>croisement</span></div>
+      <p class="cap" id="spCap"></p>
+    </div>
+
+    <div class="card navy">
+      <div class="kicker">Les limites de l’outil · section 13.5</div>
+      <ul class="limits" style="margin-top:10px">
+        <li><b>PRÉSÉLECTION</b>Un code vert ne veut pas dire « pertinent » : il désigne un candidat à une étude détaillée (résistance totale, cavitation, structure).</li>
+        <li><b>HYPOTHÈSES</b>Coefficients de profil d’hypothèse, résistance de coque proportionnelle à la charge portée : le gain est volontairement majoré.</li>
+        <li><b>NON CHIFFRÉ</b>Ni mâts, ni cavitation, ni ventilation. Le coefficient résiduel doit être estimé au mieux : le verdict en dépend.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <svg class="sea" viewBox="0 0 1200 70" preserveAspectRatio="none" aria-hidden="true">
+    <rect width="1200" height="70" fill="#0B2C40"/>
+    <g class="drift" fill="#163C54"><rect x="0" y="14" width="1240" height="3"/><rect x="40" y="34" width="1240" height="2"/><rect x="0" y="52" width="1240" height="2"/></g>
+    <rect width="1200" height="2" fill="#8FD3E0"/>
+  </svg>
+  <div class="wrap">
+    <p style="margin:0 0 6px">Projet scientifique CESI FIFC · Mathis GIRARD · Adrien SIHARATH · Alexandre HUBERT · octobre 2026</p>
+    <p style="margin:0">Formules : mémoire, chapitres 4 à 7 et 13. Les navires autres que le Silver Mary sont des exemples hors mémoire, à lire comme des ordres de grandeur.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+var RHO=1025,NU=1.19e-6,G=9.81,CD0=0.008,EO=0.80,CLMAX=1.2,KN=0.514444;
+var C={ink:"#0A1B26",navy:"#0B2C40",blue:"#2E6E8A",yel:"#F2B705",teal:"#3FB8A0",red:"#E0533D",cyan:"#8FD3E0",grey:"#56656E",mist:"#E2EDF2",line:"#D6D9D2",orange:"#E07A2E",green:"#2E9E7F",cream:"#F3F2EB",white:"#E8EEF2",hull:"#B5452F",dark:"#1B2630"};
+
+var PRESETS=[
+ {id:"silver",nom:"Silver Mary",type:"feeder · cas d’étude",kind:"container",m:10000,L:112.94,B:22.7,T:6.40,V:7.20,crAuto:false,CR:4.05,kf:1.2,tag:"MÉMOIRE"},
+ {id:"candela",nom:"Candela P-12",type:"navette à foils · 10 t",kind:"foil",m:10,L:11.99,B:4.50,T:0.45,V:12.86,crAuto:true,CR:4.05,kf:1.2,tag:"EXEMPLE"},
+ {id:"francisco",nom:"HSC Francisco",type:"ferry rapide · 1 516 t",kind:"ferry",m:1516,L:99.0,B:26.48,T:2.98,V:26.65,crAuto:true,CR:4.05,kf:1.2,tag:"EXEMPLE"},
+ {id:"evergiven",nom:"Ever Given",type:"porte-conteneurs · 265 876 t",kind:"container",m:265876,L:399.94,B:58.8,T:16.0,V:11.73,crAuto:true,CR:4.05,kf:1.2,tag:"EXEMPLE"},
+ {id:"vale",nom:"Vale Rio de Janeiro",type:"minéralier · ≈ 471 500 t",kind:"bulk",m:471500,L:362,B:65,T:23,V:7.92,crAuto:true,CR:4.05,kf:1.2,tag:"EXEMPLE"}
+];
+var S={};
+function load(p){S={preset:p.id,kind:p.kind,m:p.m,L:p.L,B:p.B,T:p.T,V:p.V,crAuto:p.crAuto,CR:p.CR,kf:p.kf,k:5,n:4,AR:10,mode:S.mode||"largeur"};}
+
+/* ---------- formatage ---------- */
+function nf(x,d){if(!isFinite(x))return "n.d.";return x.toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d}).replace("-","−");}
+function force(N){var a=Math.abs(N);if(a>=1e6)return nf(N/1e6,a>=1e7?1:2)+" MN";if(a>=1e3)return nf(N/1e3,1)+" kN";return nf(N,a<10?1:0)+" N";}
+function pow(W){var a=Math.abs(W);if(a>=1e6)return nf(W/1e6,2)+" MW";if(a>=1e3)return nf(W/1e3,1)+" kW";return nf(W,0)+" W";}
+function fin(x){return x>=100?nf(x,0):nf(x,1);}
+function sci(x,d){if(!isFinite(x)||x===0)return "0";var e=Math.floor(Math.log10(Math.abs(x)));var mnt=x/Math.pow(10,e);var sup={"-":"⁻","0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"};return nf(mnt,d)+"×10"+String(e).split("").map(function(c){return sup[c];}).join("");}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+
+/* ---------- modèle du mémoire ---------- */
+function hullAt(V,kf,crAuto,CRman){
+  var m=S.m*1000,L=S.L,B=S.B,T=S.T;
+  var Re=V*L/NU,CF=0.075/Math.pow(Math.log10(Re)-2,2),vol=m/RHO,Sw=1.7*L*T+vol/T,q=0.5*RHO*V*V;
+  var Fn=V/Math.sqrt(G*L),CR=crAuto?0.004+0.0025*Math.pow(Fn,2.5):CRman/1000;
+  var RF=q*Sw*CF,RFc=kf*RF,RR=q*Sw*CR,RT=RFc+RR,P=m*G;
+  return {V:V,Re:Re,CF:CF,vol:vol,Sw:Sw,q:q,Fn:Fn,CR:CR,RF:RF,RFc:RFc,RR:RR,RT:RT,P:P,FC:P/RT};
+}
+function foilsFor(h,mode){
+  var k=S.k/100,n=S.n,AR=S.AR,Lf=k*h.P,b,Sf,CL;
+  var CLopt=Math.sqrt(Math.PI*AR*EO*CD0);
+  if(mode==="largeur"){b=S.B;Sf=n*b*b/AR;CL=Lf/(h.q*Sf);}
+  else{CL=CLopt;Sf=Lf/(h.q*CL);b=Math.sqrt(Sf*AR/n);}
+  var c=b/AR,CDi=CL*CL/(Math.PI*AR*EO),CD=CD0+CDi,E=CL/CD,D=Lf/E,gain=k*h.RT,dR=gain-D;
+  return {k:k,n:n,AR:AR,Lf:Lf,b:b,c:c,Sf:Sf,CL:CL,CLopt:CLopt,Emax:CLopt/(2*CD0),CDi:CDi,CD:CD,E:E,D:D,gain:gain,dR:dR,dP:dR*h.V,ok:E>h.FC,stall:CL>CLMAX};
+}
+
+/* ---------- pixel art des navires (unités : 60 × 17) ---------- */
+function rnd(seed){var x=seed;return function(){x=(x*9301+49297)%233280;return x/233280;};}
+function shipRects(kind){
+  var r=[],R=function(x,y,w,h,c){r.push([x,y,w,h,c]);};
+  if(kind==="foil"){
+    R(14,9.6,34,2.4,C.white);R(46,9.6,4,1.6,C.white);R(16,12,30,1.2,"#9FB0BB");
+    R(22,6.8,14,2.8,C.dark);R(23,7.4,12,1.2,"#4C7A92");R(19,8.6,4,1,C.white);
+    R(40,8.8,6,0.8,C.white);R(14,9.2,34,0.4,C.yel);
+    return {r:r,water:12.2,bottom:13.2,foilX:[24,40]};
+  }
+  if(kind==="ferry"){
+    R(2,10.4,56,2.2,C.white);R(56,10.4,2.6,1.6,C.white);R(3,12.6,53,2.2,C.navy);R(4,14.8,49,0.8,"#082233");
+    R(8,5,42,5.4,C.white);R(9,6.6,40,1.4,C.dark);R(9,8.6,40,0.7,C.blue);R(44,3,9,2.2,C.white);R(45,3.6,7,0.9,C.dark);
+    R(18,3.2,3,1.8,C.yel);R(28,3.2,3,1.8,C.yel);
+    return {r:r,water:12.6,bottom:15.6,foilX:[16,44]};
+  }
+  R(7,0.4,3.2,3,C.dark);R(7,0.4,3.2,0.8,C.yel);
+  R(4,3.4,8.4,7.6,C.white);
+  for(var y=4.4;y<10;y+=1.9)R(5,y,6.4,0.8,C.dark);
+  if(kind==="bulk"){
+    for(var x=14;x<54;x+=5.4){R(x,8.6,4.6,2.4,"#7C8B94");R(x,8.6,4.6,0.5,"#A9B6BE");}
+    R(20,5,0.6,3.6,C.dark);R(31,5,0.6,3.6,C.dark);R(42,5,0.6,3.6,C.dark);
+  } else {
+    var rd=rnd(7),pal=[C.blue,C.grey,C.cyan,C.yel,C.red,"#93A7B5","#C9D6DE",C.blue,"#3E5868"];
+    for(var cx=13.5;cx<53;cx+=3.2){for(var ry=4.2;ry<10.5;ry+=2.1){if(ry<5&&rd()<0.35)continue;R(cx,ry,2.9,1.9,pal[Math.floor(rd()*pal.length)]);}}
+  }
+  R(2,11,55,1.6,C.dark);R(56.4,10,2.8,2.6,C.dark);R(2,12.45,56,0.3,C.white);
+  R(3,12.7,53,2.4,C.hull);R(55.6,12.7,2.2,1.6,C.hull);R(4.5,15.1,49,0.8,"#8E3524");
+  return {r:r,water:12.7,bottom:15.9,foilX:[18,40]};
+}
+function shipSVG(kind,x0,y0,u,cls){
+  var s=shipRects(kind),o='<g'+(cls?' class="'+cls+'"':'')+'>';
+  s.r.forEach(function(q){o+='<rect x="'+(x0+q[0]*u).toFixed(1)+'" y="'+(y0+q[1]*u).toFixed(1)+'" width="'+(q[2]*u+0.4).toFixed(1)+'" height="'+(q[3]*u+0.4).toFixed(1)+'" fill="'+q[4]+'"/>';});
+  return {svg:o+"</g>",info:s};
+}
+
+/* ---------- commandes ---------- */
+var CTL={
+ ship:[
+  {key:"m",lab:"Masse (déplacement)",u:"t",min:1,max:600000,log:true,dec:0},
+  {key:"L",lab:"Longueur à la flottaison L",u:"m",min:5,max:420,step:0.01,dec:2},
+  {key:"B",lab:"Largeur B",u:"m",min:1,max:70,step:0.01,dec:2},
+  {key:"T",lab:"Tirant d’eau T",u:"m",min:0.1,max:25,step:0.01,dec:2},
+  {key:"Vkn",lab:"Vitesse V",u:"nœuds",min:1,max:60,step:0.1,dec:1},
+  {key:"CR",lab:"Coefficient résiduel CR",u:"×10⁻³",min:1,max:25,step:0.01,dec:2,auto:true},
+  {key:"kf",lab:"Facteur de forme 1 + kf",u:"",min:1,max:1.5,step:0.01,dec:2}],
+ foil:[
+  {key:"k",lab:"Délestage k (part du poids portée)",u:"%",min:1,max:20,step:0.5,dec:1},
+  {key:"n",lab:"Nombre de foils n",u:"",min:1,max:8,step:1,dec:0},
+  {key:"AR",lab:"Allongement AR",u:"",min:2,max:20,step:0.5,dec:1}]
+};
+function getv(key){if(key==="Vkn")return S.V/KN;return S[key];}
+function setv(key,v){if(key==="Vkn")S.V=v*KN;else S[key]=v;}
+function buildCtl(list,host){
+  var h="";list.forEach(function(c){
+    h+='<div class="ctl" data-k="'+c.key+'"><div class="top"><label for="n-'+c.key+'">'+c.lab+'</label><span class="num"><input type="number" id="n-'+c.key+'" step="'+(c.log?1:c.step)+'"><span class="u">'+c.u+'</span></span></div>'+
+       '<input type="range" id="r-'+c.key+'" aria-label="'+esc(c.lab)+'" min="'+(c.log?Math.log10(c.min):c.min)+'" max="'+(c.log?Math.log10(c.max):c.max)+'" step="'+(c.log?0.001:c.step)+'">';
+    if(c.key==="Vkn")h+='<div class="hint" id="hint-V"></div>';
+    if(c.auto)h+='<label class="auto"><input type="checkbox" id="auto-CR"> estimé par la formule de la section 7.7 : CR = 0,004 + 0,0025 · Fn^2,5</label>';
+    h+="</div>";});
+  document.getElementById(host).innerHTML=h;
+  list.forEach(function(c){
+    var r=document.getElementById("r-"+c.key),n=document.getElementById("n-"+c.key);
+    r.addEventListener("input",function(){var v=+r.value;if(c.log)v=Math.round(Math.pow(10,v));setv(c.key,v);custom();sync();render();});
+    n.addEventListener("change",function(){var v=parseFloat(String(n.value).replace(",","."));if(!isFinite(v))return;v=Math.min(c.max,Math.max(c.min,v));setv(c.key,v);custom();sync();render();});
+  });
+}
+function sync(){
+  CTL.ship.concat(CTL.foil).forEach(function(c){
+    var v=getv(c.key),r=document.getElementById("r-"+c.key),n=document.getElementById("n-"+c.key);
+    if(c.key==="CR"&&S.crAuto)v=H.CR*1000;
+    r.value=c.log?Math.log10(v):v;n.value=+v.toFixed(c.dec);
+    var dis=c.key==="CR"&&S.crAuto;r.disabled=dis;n.disabled=dis;
+  });
+  document.getElementById("auto-CR").checked=S.crAuto;
+  document.getElementById("hint-V").textContent="soit "+nf(S.V,2)+" m/s · nombre de Froude Fn = "+nf(H.Fn,3);
+  [].forEach.call(document.querySelectorAll("#mode button"),function(b){b.classList.toggle("on",b.getAttribute("data-m")===S.mode);});
+  [].forEach.call(document.querySelectorAll(".ship"),function(b){b.classList.toggle("on",b.getAttribute("data-id")===S.preset);});
+}
+function custom(){S.preset="custom";}
+
+/* ---------- rendu ---------- */
+var H,F,FO;
+function compute(){H=hullAt(S.V,S.kf,S.crAuto,S.CR);F=foilsFor(H,S.mode);FO=foilsFor(H,S.mode==="largeur"?"adaptee":"largeur");}
+
+function arrowDefs(){
+  var o="<defs>";[["n",C.navy],["y",C.yel],["r",C.red],["o",C.orange],["g",C.teal],["k",C.grey]].forEach(function(a){
+    o+='<marker id="m'+a[0]+'" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="'+a[1]+'"/></marker>';});
+  return o+"</defs>";
+}
+function line(x1,y1,x2,y2,col,mk,w){return '<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+col+'" stroke-width="'+(w||5)+'" marker-end="url(#m'+mk+')"/>';}
+function txt(x,y,s,o){o=o||{};return '<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" font-size="'+(o.size||15)+'" fill="'+(o.fill||C.ink)+'" text-anchor="'+(o.anchor||"start")+'"'+(o.bold?' font-weight="700"':'')+(o.mono?' font-family="Courier New, monospace"':'')+'>'+o.pre+esc(s)+'</text>';}
+function T(x,y,s,o){o=o||{};o.pre=o.pre||"";return txt(x,y,s,o);}
+
+function renderHero(){
+  var W=1000,WL=232,u=8.6,x0=230;
+  var s=shipRects(S.kind),rise=Math.min(28,S.k*2.6);
+  var y0=WL-s.water*u-rise+6;
+  var o=arrowDefs();
+  o+='<rect width="1000" height="400" fill="'+C.cream+'"/>';
+  o+='<rect y="'+WL+'" width="1000" height="168" fill="'+C.navy+'"/><rect y="'+WL+'" width="1000" height="3" fill="'+C.cyan+'"/>';
+  o+='<g class="drift" fill="#163C54"><rect x="0" y="270" width="1100" height="3"/><rect x="40" y="318" width="1100" height="3"/><rect x="0" y="366" width="1100" height="3"/></g>';
+  var yb=y0+s.bottom*u,fy=yb+46;
+  var fxs=[];for(var i=0;i<Math.min(F.n,6);i++){fxs.push(x0+u*(s.foilX[0]+(F.n>1?(s.foilX[1]-s.foilX[0])*i/(Math.min(F.n,6)-1):(s.foilX[1]-s.foilX[0])/2)));}
+  var foils="";fxs.forEach(function(fx){foils+='<rect x="'+(fx-2).toFixed(1)+'" y="'+(yb-2).toFixed(1)+'" width="5" height="'+(fy-yb+2).toFixed(1)+'" fill="'+C.yel+'"/><ellipse cx="'+fx.toFixed(1)+'" cy="'+fy.toFixed(1)+'" rx="30" ry="6" fill="'+C.yel+'"/>';});
+  o+='<g class="bob">'+shipSVG(S.kind,x0,y0,u).svg+foils+"</g>";
+  if(rise>2){o+='<line x1="'+(x0-10)+'" y1="'+(WL+rise).toFixed(1)+'" x2="'+(x0+60*u+10)+'" y2="'+(WL+rise).toFixed(1)+'" stroke="'+C.cyan+'" stroke-width="1.5" stroke-dasharray="6 5"/>'+T(x0+60*u+14,WL+rise+4,"flottaison sans foil",{size:12,fill:C.cyan,mono:true});}
+  var cx=x0+31*u,cy=Math.max(30,y0-78);
+  var lb="";
+  o+=line(cx,cy,cx,y0+2,C.navy,"n",6);lb+=T(cx+12,cy+14,"POIDS P",{size:13,bold:true,mono:true,fill:C.navy})+T(cx+12,cy+32,force(H.P),{size:14});
+  var lp=Math.max(14,120*F.k),fx0=fxs[fxs.length-1];
+  o+=line(fx0+38,fy,fx0+38,fy-lp,C.yel,"y",6);lb+=T(fx0+48,fy-6,"PORTANCE k·P",{size:13,bold:true,mono:true,fill:C.yel})+T(fx0+48,fy+12,force(F.Lf)+" · "+nf(S.k,1)+" % du poids",{size:13,fill:"#fff"});
+  var mx=Math.max(H.RT,F.D),sc=200/mx,lr=Math.max(10,H.RT*sc),ld=Math.max(10,F.D*sc);
+  o+=line(x0,WL-12,x0-lr,WL-12,C.red,"r",6);lb+=T(x0-lr,WL-24,"RÉSISTANCE COQUE RT  "+force(H.RT),{size:12,bold:true,mono:true,fill:C.red});
+  var fl=fxs[0]-34;o+=line(fl,fy,fl-ld,fy,C.orange,"o",6);lb+=T(fl-ld,fy+22,"TRAÎNÉE FOILS D  "+force(F.D),{size:12,bold:true,mono:true,fill:C.orange});
+  var bx=x0+60*u+6;o+=line(bx,WL-60,bx+80,WL-60,C.grey,"k",4);lb+=T(bx,WL-70,"V = "+nf(S.V/KN,1)+" nœuds",{size:13,mono:true,fill:C.grey});
+  lb+=T(990,392,"échelle des flèches : horizontales entre elles, verticales entre elles",{size:11,anchor:"end",fill:"#8FA8B8",mono:true});
+  o+='<g class="hl">'+lb+"</g>";
+  document.getElementById("hleg").innerHTML=
+    '<div style="border-color:'+C.navy+'">Poids P<small>'+force(H.P)+'</small></div>'+
+    '<div style="border-color:'+C.yel+'">Portance des foils k · P<small>'+force(F.Lf)+" · "+nf(S.k,1)+' % du poids</small></div>'+
+    '<div style="border-color:'+C.red+'">Résistance de la coque RT<small>'+force(H.RT)+" à "+nf(S.V/KN,1)+' nœuds</small></div>'+
+    '<div style="border-color:'+C.orange+'">Traînée des foils D<small>'+force(F.D)+'</small></div>';
+  document.getElementById("hero").innerHTML=o;
+  document.getElementById("heroCap").textContent="Le foil reprend "+nf(S.k,1)+" % du poids : la coque s’enfonce moins (échelle verticale exagérée). En échange, il ajoute sa propre traînée.";
+}
+
+function renderVerdict(){
+  var v=document.getElementById("verdict");v.classList.toggle("green",F.ok);
+  document.getElementById("vk").textContent=F.ok?"VERDICT · CODE VERT":"VERDICT · CODE ORANGE";
+  document.getElementById("vh").textContent=F.ok?"Candidat à une étude détaillée":"Bilan défavorable";
+  document.getElementById("vp").textContent=(F.ok?"Le foil porte mieux que la coque : ":"La coque porte mieux que le foil : ")+"finesse des foils "+fin(F.E)+(F.ok?" > ":" < ")+"finesse de la coque "+fin(H.FC)+" ("+(S.mode==="largeur"?"foils de la largeur du navire":"surface adaptée à la vitesse")+").";
+  document.getElementById("vo").textContent="Avec "+(S.mode==="largeur"?"une surface adaptée à la vitesse":"des foils de la largeur du navire")+" : finesse "+fin(FO.E)+" → "+(FO.ok?"code vert":"code orange")+(FO.stall?" (décrochage)":"");
+  var ch="";
+  if(F.stall)ch+='<span class="chip r">Décrochage : CL = '+nf(F.CL,2)+' &gt; 1,2, les foils sont trop petits pour porter '+nf(S.k,1)+' % du poids</span>';
+  if(H.Fn>0.6)ch+='<span class="chip a">Fn = '+nf(H.Fn,2)+' &gt; 0,6 : hors du domaine du modèle, ordre de grandeur seulement (7.7)</span>';
+  if(S.mode==="adaptee"&&F.b>S.B*1.02)ch+='<span class="chip b">Envergure '+nf(F.b,1)+' m par foil : plus large que le navire ('+nf(S.B,1)+' m)</span>';
+  if(S.preset!=="silver")ch+='<span class="chip b">'+(S.preset==="custom"?"Valeurs modifiées":"Exemple hors mémoire")+' : ordres de grandeur</span>';
+  document.getElementById("chips").innerHTML=ch;
+  document.getElementById("t1").textContent=force(F.gain);
+  document.getElementById("t2").textContent=force(F.D);
+  var t3=document.getElementById("t3");t3.textContent=(F.dR>=0?"+":"−")+force(Math.abs(F.dR));t3.style.color=F.dR>=0?C.green:C.red;
+  document.getElementById("t4l").textContent=F.dR>=0?"Puissance économisée":"Puissance en plus";
+  document.getElementById("t4").textContent=(F.dR>=0?"−":"+")+pow(Math.abs(F.dP));
+}
+
+function renderDuel(){
+  var top=Math.max(H.FC,F.E)>1e4?5:4,pos=function(x){return Math.max(0,Math.min(100,Math.log10(Math.max(x,1))/top*100));};
+  document.getElementById("bC").style.width=pos(H.FC)+"%";document.getElementById("bF").style.width=pos(F.E)+"%";
+  document.getElementById("bF").style.background=F.ok?C.teal:C.orange;
+  document.getElementById("thr").style.left=pos(H.FC)+"%";
+  document.getElementById("vC").textContent=fin(H.FC);document.getElementById("vF").textContent=fin(F.E);
+  var t="";for(var i=0;i<=top;i++)t+='<span style="left:'+(i/top*100)+'%">'+nf(Math.pow(10,i),0)+"</span>";
+  document.getElementById("ticks").innerHTML=t;
+  var r=H.FC/F.E;
+  document.getElementById("duelH").textContent=F.ok?"Les foils portent "+nf(F.E/H.FC,1)+" fois mieux que la coque":"La coque porte "+nf(r,1)+" fois mieux que les foils";
+  document.getElementById("duelCap").textContent="La coque porte "+fin(H.FC)+" N de poids par newton de résistance ; les foils, "+fin(F.E)+" N par newton de traînée. Image du mémoire : la flottaison, ce sont les roues d’une valise ; le foil, c’est la porter à bout de bras. Le délestage k disparaît du critère : il fixe la taille des foils, pas le seuil à battre.";
+}
+
+function renderBalance(){
+  var g=F.gain,d=F.D,mx=Math.max(g,d),ratio=d/g;
+  var th=16*Math.tanh(Math.log10(ratio));
+  var cx=320,cy=110,Lb=210,rad=th*Math.PI/180;
+  var lx=cx-Lb*Math.cos(rad),ly=cy-Lb*Math.sin(rad),rx=cx+Lb*Math.cos(rad),ry=cy+Lb*Math.sin(rad);
+  var sz=function(v){return 22+78*Math.sqrt(v/mx);},sg=sz(g),sd=sz(d);
+  var o="";
+  o+='<rect x="'+(cx-70)+'" y="296" width="140" height="14" fill="'+C.navy+'"/><rect x="'+(cx-9)+'" y="'+cy+'" width="18" height="188" fill="'+C.grey+'"/>';
+  o+='<g class="beam" style="transform-origin:'+cx+'px '+cy+'px;transform:rotate('+th.toFixed(2)+'deg)"><rect x="'+(cx-Lb-6)+'" y="'+(cy-6)+'" width="'+(2*Lb+12)+'" height="12" fill="'+C.navy+'"/></g>';
+  o+='<circle cx="'+cx+'" cy="'+cy+'" r="11" fill="'+C.yel+'"/>';
+  function plate(x,y,s,col,lab,val,tx){
+    var p='<g class="pl" style="transform:translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)">';
+    p+='<line x1="0" y1="0" x2="-55" y2="60" stroke="'+C.grey+'" stroke-width="2"/><line x1="0" y1="0" x2="55" y2="60" stroke="'+C.grey+'" stroke-width="2"/>';
+    p+='<rect x="-68" y="60" width="136" height="9" fill="'+C.navy+'"/>';
+    p+='<rect x="'+(-s/2).toFixed(1)+'" y="'+(60-s).toFixed(1)+'" width="'+s.toFixed(1)+'" height="'+s.toFixed(1)+'" fill="'+col+'"/>';
+    p+='<rect x="'+(-s/2).toFixed(1)+'" y="'+(60-s).toFixed(1)+'" width="'+s.toFixed(1)+'" height="5" fill="#fff" opacity=".25"/>';
+    p+=T(0,92,lab,{anchor:"middle",size:12,bold:true,mono:true,fill:tx})+T(0,110,val,{anchor:"middle",size:15,fill:C.ink})+"</g>";
+    return p;}
+  o+=plate(lx,ly,sg,C.teal,"GAIN SUR LA COQUE",force(g),C.green)+plate(rx,ry,sd,C.red,"TRAÎNÉE DES FOILS",force(d),C.red);
+  var rr=ratio>=1?ratio:1/ratio,sc2=ratio>=1?C.red:C.green,st="× "+nf(rr,rr>=10?0:1),sx=ratio>=1?96:544;
+  o+='<g transform="translate('+sx+' 262) rotate(-8)"><rect x="-58" y="-24" width="116" height="40" fill="none" stroke="'+sc2+'" stroke-width="3"/>'+T(0,5,st,{anchor:"middle",size:22,bold:true,mono:true,fill:sc2})+"</g>";
+  document.getElementById("balance").innerHTML=o;
+  document.getElementById("balCap").textContent=ratio>=1?"La traînée des foils pèse "+nf(ratio,1)+" fois le gain sur la coque : c’est exactement le rapport des finesses ("+fin(H.FC)+" / "+fin(F.E)+"). Bilan : "+force(F.dR)+".":"Le gain sur la coque dépasse la traînée des foils : bilan favorable de "+force(F.dR)+".";
+}
+
+function renderRT(){
+  var a=H.RFc/H.RT*100,b=100-a;
+  document.getElementById("rtH").textContent="Coque : "+force(H.RT)+" de résistance, dont "+nf(b,0)+" % de résiduelle";
+  document.getElementById("stack").innerHTML='<div style="width:'+a+'%;background:'+C.blue+'">'+(a>14?nf(a,0)+" % · "+force(H.RFc):"")+'</div><div style="width:'+b+'%;background:'+C.cyan+';color:'+C.navy+'">'+(b>14?nf(b,0)+" % · "+force(H.RR):"")+"</div>";
+  document.getElementById("rtCap").textContent="RT = (1 + kf) · RF + RR, avec RF = q · Sw · CF (ITTC 1957) et RR = q · Sw · CR. Coefficient résiduel utilisé : CR = "+sci(H.CR,2)+(S.crAuto?" (estimé par la formule de la section 7.7)":"")+". Délester "+nf(S.k,1)+" % du poids ferait gagner au mieux k · RT = "+force(F.gain)+".";
+}
+
+function renderTop(){
+  var Lh=S.L,B=S.B,b=F.b,c=F.c,n=F.n;
+  var sc=Math.min(470/Lh,200/Math.max(B,b)),x0=130+(470-Lh*sc)/2,yc=150;
+  var o=arrowDefs(),hb=B*sc/2,bow=Math.min(Lh*sc*0.16,60);
+  o+='<rect width="640" height="300" fill="'+C.navy+'"/>';
+  o+='<path d="M'+x0+" "+(yc-hb*0.92)+" L"+(x0+Lh*sc-bow)+" "+(yc-hb)+" Q"+(x0+Lh*sc)+" "+(yc-hb*0.3)+" "+(x0+Lh*sc)+" "+yc+" Q"+(x0+Lh*sc)+" "+(yc+hb*0.3)+" "+(x0+Lh*sc-bow)+" "+(yc+hb)+" L"+x0+" "+(yc+hb*0.92)+'Z" fill="'+C.hull+'" stroke="'+C.dark+'" stroke-width="2"/>';
+  var cw=Math.max(3,c*sc),fb=b*sc;
+  for(var i=0;i<n;i++){var fx=x0+Lh*sc*(n>1?0.18+0.6*i/(n-1):0.5);
+    o+='<rect x="'+(fx-cw/2).toFixed(1)+'" y="'+(yc-fb/2).toFixed(1)+'" width="'+cw.toFixed(1)+'" height="'+fb.toFixed(1)+'" fill="'+C.yel+'" stroke="#9c7600" stroke-width="1"/>';}
+  o+=line(x0,278,x0+Lh*sc,278,C.cyan,"",1.5)+T(x0+Lh*sc/2,272,"L = "+nf(Lh,1)+" m",{anchor:"middle",size:12,mono:true,fill:C.cyan});
+  var by=x0-14;o+='<line x1="'+by+'" y1="'+(yc-hb)+'" x2="'+by+'" y2="'+(yc+hb)+'" stroke="'+C.cyan+'" stroke-width="1.5"/>'+T(by-4,yc+4,"B = "+nf(B,1)+" m",{anchor:"end",size:12,mono:true,fill:C.cyan});
+  var ex=x0+Lh*sc*(n>1?0.78:0.5)+cw/2+8;o+='<line x1="'+ex+'" y1="'+(yc-fb/2)+'" x2="'+ex+'" y2="'+(yc+fb/2)+'" stroke="'+C.yel+'" stroke-width="1.5"/>'+T(ex+5,yc-fb/2+12,"b = "+nf(b,1)+" m",{size:12,mono:true,fill:C.yel});
+  document.getElementById("top").innerHTML=o;
+  document.getElementById("topCap").textContent=n+" foil"+(n>1?"s":"")+" de "+nf(b,1)+" m d’envergure et "+nf(c,2)+" m de corde (allongement "+nf(F.AR,1)+") : surface totale "+nf(F.Sf,1)+" m². Pour porter "+force(F.Lf)+" à "+nf(S.V/KN,1)+" nœuds, ils travaillent à CL = "+nf(F.CL,3)+(F.stall?" : au-delà de 1,2, ils décrochent.":S.mode==="largeur"?" (optimum : "+nf(F.CLopt,3)+").":" (optimum).");
+}
+
+function node(t,f,v){return '<div class="node"><span>'+t+"<small>"+f+"</small></span><b>"+v+"</b></div>";}
+var DN='<div class="arrow">▼</div>';
+function renderChain(){
+  document.getElementById("chC").innerHTML=
+    node("Reynolds","Re = V · L / ν",sci(H.Re,2))+DN+node("Frottement","CF = 0,075 / (log Re − 2)²",sci(H.CF,3))+DN+
+    node("Surface mouillée","Sw = 1,7 · L · T + ∇ / T",nf(H.Sw,H.Sw<100?2:0)+" m²")+DN+node("Frottement corrigé","(1 + kf) · q · Sw · CF",force(H.RFc))+DN+
+    node("Froude et vagues","Fn = V / √(g · L) · RR = q · Sw · CR","Fn "+nf(H.Fn,3)+" · "+force(H.RR))+DN+node("Résistance totale","RT = (1 + kf) · RF + RR",force(H.RT))+DN+
+    node("Finesse de la coque","P / RT","<span style='color:"+C.navy+"'>"+fin(H.FC)+"</span>");
+  document.getElementById("chF").innerHTML=
+    node("Portance à fournir","L = k · P",force(F.Lf))+DN+node("Surface des foils",S.mode==="largeur"?"S = n · B² / AR":"S = L / (q · CL,opt)",nf(F.Sf,F.Sf<10?2:1)+" m²")+DN+
+    node("Coefficient de portance","CL = L / (q · S)",nf(F.CL,3))+DN+node("Traînée induite","CDi = CL² / (π · AR · e)",nf(F.CDi,4))+DN+
+    node("Coefficient de traînée","CD = CD0 + CDi",nf(F.CD,4))+DN+node("Traînée des foils","D = L / E",force(F.D))+DN+
+    node("Finesse des foils","E = CL / CD","<span style='color:"+(F.ok?C.green:C.orange)+"'>"+fin(F.E)+"</span>");
+  document.getElementById("mergeL").textContent="Critère : E > P / RT ?  "+fin(F.E)+(F.ok?" > ":" < ")+fin(H.FC);
+  document.getElementById("mergeR").textContent=(F.ok?"Code vert · ":"Code orange · ")+"ΔR = "+force(F.dR);
+  var rows=[["h","COQUE"],[1,"Nombre de Reynolds","Re = V · L / ν",sci(H.Re,2)],[2,"Coefficient de frottement","CF = 0,075 / (log₁₀ Re − 2)²",sci(H.CF,3)],
+    [3,"Volume et surface mouillée","∇ = m / ρ ; Sw = 1,7 · L · T + ∇ / T",nf(H.vol,0)+" m³ · "+nf(H.Sw,0)+" m²"],[4,"Pression dynamique","q = ½ · ρ · V²",nf(H.q,0)+" Pa"],
+    [5,"Frottement corrigé","(1 + kf) · q · Sw · CF",force(H.RFc)],[6,"Résistance résiduelle","RR = q · Sw · CR",force(H.RR)],[7,"Résistance totale et finesse","RT ; P / RT",force(H.RT)+" · "+fin(H.FC)],
+    ["h","FOILS ET BILAN"],[8,"Portance à fournir","L = k · P",force(F.Lf)],[9,"Surface des foils",S.mode==="largeur"?"S = n · b² / AR, b = B":"S = L / (q · CL,opt)",nf(F.Sf,1)+" m²"],
+    [10,"Coefficient de portance","CL = L / (q · S)",nf(F.CL,3)],[11,"Finesse des foils","E = CL / (CD0 + CL² / (π · AR · e))",fin(F.E)],
+    [12,"Traînée des foils","D = L / E",force(F.D)],[13,"Bilan net","ΔR = k · RT − D",force(F.dR)]];
+  document.getElementById("steps").innerHTML=rows.map(function(r){return r[0]==="h"?'<tr class="h"><td colspan="4">'+r[1]+"</td></tr>":"<tr><td>"+r[0]+"</td><td>"+r[1]+"</td><td>"+r[2]+"</td><td>"+r[3]+"</td></tr>";}).join("");
+}
+
+function renderSpeed(){
+  var X0=92,X1=620,Y0=24,Y1=280,vmax=Math.max(60,Math.ceil(S.V/KN*1.3/10)*10);vmax=Math.min(vmax,100);
+  var yTop=5,px=function(v){return X0+(v/vmax)*(X1-X0);},py=function(f){return Y1-(Math.log10(Math.max(f,1))/yTop)*(Y1-Y0);};
+  var o="",i;
+  for(i=0;i<=yTop;i++){var yy=py(Math.pow(10,i));o+='<line x1="'+X0+'" y1="'+yy+'" x2="'+X1+'" y2="'+yy+'" stroke="'+C.line+'"/>'+T(X0-6,yy+4,nf(Math.pow(10,i),0),{anchor:"end",size:11,mono:true,fill:C.grey});}
+  for(i=0;i<=vmax;i+=10){var xx=px(i);o+='<line x1="'+xx+'" y1="'+Y1+'" x2="'+xx+'" y2="'+(Y1+5)+'" stroke="'+C.grey+'"/>'+T(xx,Y1+18,String(i),{anchor:"middle",size:11,mono:true,fill:C.grey});}
+  o+=T((X0+X1)/2,Y1+36,"vitesse (nœuds)",{anchor:"middle",size:12,fill:C.grey});
+  var Emax=F.Emax,hp="",fp="",cross=null,prevOk=null,fixedS=S.n*S.B*S.B/S.AR,k=S.k/100,P=S.m*1000*G;
+  for(var v=0.5;v<=vmax;v+=0.25){
+    var h=hullAt(v*KN,1,true,0);var y=py(h.FC);hp+=(hp?"L":"M")+px(v).toFixed(1)+" "+Math.max(Y0,y).toFixed(1);
+    if(cross===null&&h.FC<=Emax)cross=v;
+    var q=0.5*RHO*Math.pow(v*KN,2),CL=k*P/(q*fixedS);
+    if(CL<=CLMAX){var E=CL/(CD0+CL*CL/(Math.PI*S.AR*EO));fp+=(fp&&prevOk?"L":"M")+px(v).toFixed(1)+" "+py(E).toFixed(1);prevOk=true;}else prevOk=false;
+  }
+  o+='<path d="'+hp+'" fill="none" stroke="'+C.navy+'" stroke-width="3"/>';
+  o+='<line x1="'+X0+'" y1="'+py(Emax)+'" x2="'+X1+'" y2="'+py(Emax)+'" stroke="'+C.teal+'" stroke-width="3" stroke-dasharray="8 5"/>';
+  if(fp)o+='<path d="'+fp+'" fill="none" stroke="'+C.orange+'" stroke-width="2.5"/>';
+  var xv=px(S.V/KN);o+='<line x1="'+xv+'" y1="'+Y0+'" x2="'+xv+'" y2="'+Y1+'" stroke="'+C.grey+'" stroke-dasharray="3 4"/>'+T(xv+4,Y0+12,"vitesse choisie",{size:11,mono:true,fill:C.grey});
+  if(cross!==null){o+='<circle cx="'+px(cross)+'" cy="'+py(Emax)+'" r="7" fill="'+C.yel+'" stroke="'+C.navy+'" stroke-width="2"/>'+T(px(cross)+(cross>vmax*0.45?-10:10),py(Emax)-12,"croisement ≈ "+nf(cross,0)+" nœuds",{size:12,bold:true,anchor:cross>vmax*0.45?"end":"start"});}
+  document.getElementById("speed").innerHTML=o;
+  var h14=hullAt(S.V,1,true,0);
+  document.getElementById("spH").textContent=cross===null?"Pas de croisement avant "+vmax+" nœuds":"Coque et foil ne se croisent que vers "+nf(cross,0)+" nœuds";
+  document.getElementById("spCap").textContent="Hypothèses de la section 7.7 : CR = 0,004 + 0,0025 · Fn^2,5, sans facteur de forme (la finesse de la coque vaut ici "+fin(h14.FC)+" à la vitesse choisie). La finesse de la coque s’effondre avec la vitesse ; celle d’un foil à surface adaptée reste égale à "+nf(Emax,1)+". Ce n’est pas le foil qui s’améliore, c’est la coque qui se dégrade. Au-delà de Fn ≈ 0,6, le croisement n’est qu’un ordre de grandeur.";
+}
+
+function renderShips(){
+  var h="";PRESETS.forEach(function(p){var s=shipSVG(p.kind,2,1,2,"");h+='<button class="ship" data-id="'+p.id+'"><svg viewBox="0 0 124 34" aria-hidden="true"><rect y="27" width="124" height="7" fill="'+C.navy+'"/>'+s.svg+'</svg><span class="tag">'+p.tag+"</span><b>"+p.nom+"</b><span>"+p.type+"</span></button>";});
+  h+='<button class="ship" data-id="custom" disabled style="cursor:default"><svg viewBox="0 0 124 34" aria-hidden="true"><rect y="27" width="124" height="7" fill="'+C.navy+'"/>'+shipSVG("container",2,1,2,"").svg+'</svg><span class="tag">LIBRE</span><b>Personnalisé</b><span>dès qu’un curseur bouge</span></button>';
+  var host=document.getElementById("ships");host.innerHTML=h;
+  [].forEach.call(host.querySelectorAll(".ship"),function(b){var id=b.getAttribute("data-id");if(id==="custom")return;b.addEventListener("click",function(){var p=PRESETS.filter(function(x){return x.id===id;})[0];load(p);compute();sync();render();});});
+}
+
+function render(){compute();sync();renderHero();renderVerdict();renderDuel();renderBalance();renderRT();renderTop();renderChain();renderSpeed();}
+
+buildCtl(CTL.ship,"ctl-ship");buildCtl(CTL.foil,"ctl-foil");renderShips();
+document.getElementById("auto-CR").addEventListener("change",function(e){if(!e.target.checked&&S.crAuto)S.CR=+(H.CR*1000).toFixed(2);S.crAuto=e.target.checked;custom();render();});
+[].forEach.call(document.querySelectorAll("#mode button"),function(b){b.addEventListener("click",function(){S.mode=b.getAttribute("data-m");render();});});
+document.getElementById("reset").addEventListener("click",function(){S.mode="largeur";load(PRESETS[0]);render();});
+if(window.matchMedia&&window.matchMedia("(max-width:979px)").matches)document.getElementById("reg").open=false;
+var prm=new URLSearchParams(location.search),pid=prm.get("navire"),pre=PRESETS.filter(function(p){return p.id===pid;})[0]||PRESETS[0];
+S.mode=prm.get("mode")==="adaptee"?"adaptee":"largeur";load(pre);compute();render();
+window.__sim={S:S,get H(){return H;},get F(){return F;}};
+})();
+</script>
+</body>
+</html>
